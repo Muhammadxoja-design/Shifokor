@@ -1,0 +1,11 @@
+{
+  "name": "shifokor-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix webapp",
+    "build:webapp": "npm run build --prefix webapp",
+    "build": "npm run install:all && npm run build:webapp",
+    "start": "npm start --prefix backend"
+  }
+}
