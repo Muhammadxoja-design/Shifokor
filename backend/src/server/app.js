@@ -25,6 +25,13 @@ app.post('/api/evaluate', async (req, res) => {
 
   // 2. Save Assessment to DB
   try {
+    // Ensure user exists before inserting assessment (for local testing / webapp fallback)
+    const insertUserStmt = db.prepare(`
+      INSERT OR IGNORE INTO Users (telegram_id, first_name)
+      VALUES (?, 'Guest')
+    `);
+    insertUserStmt.run(telegram_id);
+
     const stmt = db.prepare(`
       INSERT INTO Assessments (telegram_id, risk_percentage, ai_feedback)
       VALUES (?, ?, ?)
