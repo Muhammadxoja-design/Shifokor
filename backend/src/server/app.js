@@ -40,7 +40,7 @@ app.post('/api/evaluate', async (req, res) => {
 });
 
 // Fallback for React Router if needed (though we don't have routing here, just in case)
-app.get('*', (req, res) => {
+app.get('/(.*)', (req, res) => {
   res.sendFile(path.join(__dirname, '../../../webapp/dist/index.html'));
 });
 
