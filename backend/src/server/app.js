@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('../db/database');
-const { evaluateRisk } = require('../ai/evaluate');
+const { evaluateRisk, chatWithDoctor } = require('../ai/evaluate');
 
 const app = express();
 
@@ -14,10 +14,10 @@ app.use(express.static(path.join(__dirname, '../../../webapp/dist')));
 
 // API Endpoint
 app.post('/api/evaluate', async (req, res) => {
-  const { telegram_id, answers } = req.body;
+  const { profile_id, answers } = req.body;
 
-  if (!telegram_id || !answers) {
-    return res.status(400).json({ error: "Missing telegram_id or answers" });
+  if (!profile_id || !answers) {
+    return res.status(400).json({ error: "Missing profile_id or answers" });
   }
 
   // 1. Evaluate Risk using AI
@@ -25,18 +25,11 @@ app.post('/api/evaluate', async (req, res) => {
 
   // 2. Save Assessment to DB
   try {
-    // Ensure user exists before inserting assessment (for local testing / webapp fallback)
-    const insertUserStmt = db.prepare(`
-      INSERT OR IGNORE INTO Users (telegram_id, first_name)
-      VALUES (?, 'Guest')
-    `);
-    insertUserStmt.run(telegram_id);
-
     const stmt = db.prepare(`
-      INSERT INTO Assessments (telegram_id, risk_percentage, ai_feedback)
+      INSERT INTO Assessments (profile_id, risk_percentage, ai_feedback)
       VALUES (?, ?, ?)
     `);
-    stmt.run(telegram_id, aiResult.risk_percentage, aiResult.explanation);
+    stmt.run(profile_id, aiResult.risk_percentage, aiResult.explanation);
   } catch (dbError) {
     console.error("Failed to save assessment:", dbError);
     // Even if db fails, return the AI result to user.
@@ -44,6 +37,18 @@ app.post('/api/evaluate', async (req, res) => {
 
   // 3. Return result to frontend
   res.json(aiResult);
+});
+
+// Chat Endpoint
+app.post('/api/chat', async (req, res) => {
+  const { messages, context } = req.body;
+
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: "Missing or invalid messages array" });
+  }
+
+  const reply = await chatWithDoctor(messages, context);
+  res.json({ reply });
 });
 
 // Fallback for React Router if needed (though we don't have routing here, just in case)

@@ -47,7 +47,7 @@ async function registerConversation(conversation, ctx) {
   // Hide the keyboard
   const replyMarkup = { remove_keyboard: true };
 
-  // Save to DB
+  // Save User to DB
   try {
     const stmt = db.prepare(`
       INSERT INTO Users (telegram_id, first_name, last_name, gender, age, phone_number)
@@ -61,11 +61,13 @@ async function registerConversation(conversation, ctx) {
     `);
     stmt.run(ctx.from.id, firstName, lastName, gender, age, phoneNumber);
 
-    // Send WebApp Inline Button
-    const webAppUrl = process.env.WEBAPP_URL || 'https://example.com';
-    const inlineKeyboard = new InlineKeyboard().webApp("Testni boshlash", webAppUrl);
+    const inlineKeyboard = new InlineKeyboard()
+      .text("O'zim uchun", "profile_self")
+      .text("Otam uchun", "profile_father").row()
+      .text("Onam uchun", "profile_mother")
+      .text("Boshqa", "profile_other");
     
-    await ctx.reply("Ro'yxatdan muvaffaqiyatli o'tdingiz! Qandli diabet xavfini baholash uchun quyidagi tugmani bosing:", {
+    await ctx.reply("Ro'yxatdan muvaffaqiyatli o'tdingiz! Kim uchun test topshiryapsiz?", {
       reply_markup: inlineKeyboard
     });
 

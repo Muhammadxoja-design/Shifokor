@@ -7,8 +7,7 @@ const db = new Database(dbPath, { verbose: console.log });
 // Initialize tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS Users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id INTEGER UNIQUE,
+    telegram_id INTEGER PRIMARY KEY,
     first_name TEXT,
     last_name TEXT,
     gender TEXT,
@@ -17,13 +16,23 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS Profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    relation_type TEXT, -- 'self', 'father', 'mother', 'other'
+    name TEXT,
+    age INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(telegram_id)
+  );
+
   CREATE TABLE IF NOT EXISTS Assessments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id INTEGER,
+    profile_id INTEGER,
     risk_percentage INTEGER,
     ai_feedback TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (telegram_id) REFERENCES Users(telegram_id)
+    FOREIGN KEY (profile_id) REFERENCES Profiles(id)
   );
 `);
 
